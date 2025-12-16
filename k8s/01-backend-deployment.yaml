@@ -1,0 +1,121 @@
+# ---------------------------------------------------------
+# LAYER 1: THE API HEADER
+# ---------------------------------------------------------
+# "apiVersion": This is the contract version.
+# apps/v1 is the standard for Deployments. It tells K8s:
+# "I am speaking the language of Applications Version 1."
+apiVersion: apps/v1
+
+# "kind": What object are we creating?
+# A Deployment is a "Manager" that supervises Pods.
+kind: Deployment
+
+# ---------------------------------------------------------
+# LAYER 2: METADATA (About the Manager)
+# ---------------------------------------------------------
+metadata:
+  # The name of this specific manager in the cluster.
+  # Useful for commands like: kubectl get deployment backend
+  name: backend
+  
+  # The label attached to the Manager itself. 
+  # This helps us filter lists later.
+  labels:
+    app: backend
+    tier: logic
+
+# ---------------------------------------------------------
+# LAYER 3: SPECIFICATION (The Desired State)
+# ---------------------------------------------------------
+spec:
+  # "replicas": The Insurance Policy.
+  # We want 1 copy running. In Prod, we usually set this to 2 or 3.
+  # If the pod crashes, the Manager starts a new one to match this number.
+  replicas: 1
+
+  # "selector": The Search Query.
+  # The Deployment asks: "Which pods belong to me?"
+  # It looks for pods carrying the ID card (label) "app: backend".
+  selector:
+    matchLabels:
+      app: backend
+
+  # -------------------------------------------------------
+  # THE TEMPLATE (The Blueprint for the Worker)
+  # -------------------------------------------------------
+  # Everything below here describes the POD that will be created.
+  template:
+    metadata:
+      # THE ID CARD:
+      # We MUST give the pod this label so the Selector above can find it.
+      labels:
+        app: backend
+    
+    spec:
+      containers:
+      # Name of the container inside the Pod (usually same as app name)
+      - name: backend
+        
+        # THE IMAGE SOURCE:
+        # K8s will go to Docker Hub and pull this specific tag.
+        # REPLACE THIS with your actual username!
+        image: sushantc041/employee-backend:v1
+
+        # "imagePullPolicy":
+        # Always = Check Docker Hub every time (Secure, ensures latest updates).
+        # IfNotPresent = Use local cache if available (Faster startup).
+        imagePullPolicy: Always
+
+        # THE PORT:
+        # This is purely informational in K8s, but good for documentation.
+        # It tells us the Java app inside is listening on 8080.
+        ports:
+        - containerPort: 8080
+
+        resources:
+          requests:
+            memory: "256Mi"   # Minimum RAM to start Spring Boot
+            cpu: "250m"       # 1/4 core
+          limits:
+            memory: "512Mi"   # Max RAM allowed (Prevents memory leaks)
+            cpu: "500m"
+
+        # --- NEW SECTION STARTS HERE ---
+        # 1. LIVENESS: "Are you frozen?"
+        # If this fails 3 times, K8s RESTARTS the pod.
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 40  # Wait 40s for Java to start before checking
+          periodSeconds: 10        # Check every 10s    
+
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 40
+          periodSeconds: 10
+        # --- NEW SECTION ENDS HERE ---  
+        
+        # -------------------------------------------------
+        # ENVIRONMENT VARIABLES (The Configuration)
+        # -------------------------------------------------
+        # We inject the DB settings here so Java knows where to go.
+        env:
+        - name: HOST_PORT
+          value: "8080"
+        - name: DB_HOST
+          value: "mysql"
+        - name: MYSQL_DB_NAME
+          value: "techcorp_db"
+          
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: mysql-user
+              
+        - name: MYSQL_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: mysql-user-password

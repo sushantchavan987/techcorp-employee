@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+    tier: presentation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        # IMPORTANT: Ensure you have built and pushed this 'v2' tag 
+        # after making the code changes (window.env) in React.
+        image: sushantc041/employee-frontend:v2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+
+        # ---------------------------------------------------------
+        # UPGRADE 1: RESOURCE MANAGEMENT (The Budget)
+        # ---------------------------------------------------------
+        # Nginx is lightweight, so we give it a small budget.
+        resources:
+          requests:
+            memory: "64Mi"   # Guaranteed RAM
+            cpu: "50m"       # 5% of a CPU core
+          limits:
+            memory: "128Mi"  # Max RAM
+            cpu: "100m"      # 10% of a CPU core
+
+        # ---------------------------------------------------------
+        # UPGRADE 2: RUNTIME CONFIGURATION (The Brain Transplant)
+        # ---------------------------------------------------------
+        # This overwrites the 'config.js' inside the container
+        # with the content from your ConfigMap.
+        volumeMounts:
+        - name: config-volume
+          mountPath: /usr/share/nginx/html/config.js
+          subPath: config.js # Matches the key in ConfigMap
+
+        # ---------------------------------------------------------
+        # UPGRADE 3: LIVENESS PROBE
+        # ---------------------------------------------------------
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+
+      # Define the Volume Source
+      volumes:
+      - name: config-volume
+        configMap:
+          name: frontend-config

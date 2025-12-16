@@ -1,0 +1,20 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  # 1. THE AUTOMATIC TUNNEL
+  # Maps Windows Port 8000 -> Container Port 80 (Ingress)
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 8000
+    listenAddress: "0.0.0.0"
+    protocol: TCP
+
+  # 2. INGRESS PREPARATION
+  # We label this node so the Nginx Controller knows where to sit.
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "ingress-ready=true"

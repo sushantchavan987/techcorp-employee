@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+data:
+  config.js: |
+    window.env = {
+      // Pointing to the Host Port (8000)
+      API_URL: "http://techcorp.local:8000/api/employees"
+    };

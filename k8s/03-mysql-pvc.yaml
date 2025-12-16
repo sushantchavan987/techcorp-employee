@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  # ACCESS MODES:
+  # ReadWriteOnce: Only one node can mount this at a time (Standard for Databases).
+  # ReadWriteMany: Many nodes can write (Used for Shared Filesystems like NFS).
+  accessModes:
+    - ReadWriteOnce
+  
+  # RESOURCES:
+  # How big is the drive?
+  resources:
+    requests:
+      storage: 1Gi
