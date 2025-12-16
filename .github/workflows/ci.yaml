@@ -28,6 +28,7 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./employee-api
+          file: ./employee-api/Dockerfile
           push: true
           tags: sushantc041/backend:v2
