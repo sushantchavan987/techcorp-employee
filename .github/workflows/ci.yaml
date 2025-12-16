@@ -1,34 +1,52 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Images
 
-# 1. THE TRIGGER (When to wake up?)
 on:
   push:
     branches: [ "main" ]
 
-# 2. THE JOB (The Mission)
 jobs:
-  build-and-push:
-    # 3. THE RUNNER (The Computer)
+  # JOB 1: BACKEND
+  build-backend:
+    name: Build Backend
     runs-on: ubuntu-latest
-
-    # 4. THE STEPS (The Checklist)
     steps:
-      # Step A: Download the code from the repo
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step B: Log in to DockerHub (Using the Secrets)
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Step C: Build the Image and Push it
-      - name: Build and Push
+      - name: Build and Push Backend
         uses: docker/build-push-action@v5
         with:
           context: ./employee-api
           file: ./employee-api/Dockerfile
           push: true
           tags: sushantc041/backend:v2
+
+  # JOB 2: FRONTEND (The New Part)
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    # This ensures they run in parallel (default behavior)
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./employee-ui
+          file: ./employee-ui/Dockerfile
+          push: true
+          # Note: We are naming this 'frontend' and giving it tag 'v2'
+          tags: sushantc041/frontend:v2
