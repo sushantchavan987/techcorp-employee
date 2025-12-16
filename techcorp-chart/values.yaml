@@ -1,9 +1,21 @@
+# Backend Configuration
 backend:
-  replicaCount: 3
+  replicaCount: 2          # Let's use 2 to save resources, or keep 3 if you prefer
   image:
     repository: sushantc041/backend
-    tag: "v1"
-    pullPolicy: IfNotPresent
+    tag: "v2"              # <--- UPDATED to v2
+    pullPolicy: Always     # Changed to 'Always' to ensure it pulls the new code
   service:
     type: ClusterIP
     port: 8080
+
+# Frontend Configuration (NEW)
+frontend:
+  replicaCount: 2
+  image:
+    repository: sushantc041/frontend
+    tag: "v2"              # <--- UPDATED to v2
+    pullPolicy: Always
+  service:
+    type: NodePort         # Expose to outside
+    port: 80

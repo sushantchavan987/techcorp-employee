@@ -6,7 +6,7 @@ metadata:
     app: frontend
     tier: presentation
 spec:
-  replicas: 1
+  replicas: {{ .Values.frontend.replicaCount }}
   selector:
     matchLabels:
       app: frontend
@@ -19,8 +19,9 @@ spec:
       - name: frontend
         # IMPORTANT: Ensure you have built and pushed this 'v2' tag 
         # after making the code changes (window.env) in React.
-        image: sushantc041/employee-frontend:v2
-        imagePullPolicy: Always
+        image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+
+        imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
         ports:
         - containerPort: 80
 
